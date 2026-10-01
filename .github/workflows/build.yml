@@ -1,4 +1,4 @@
-name: Debug and Build
+name: Build APK
 
 on:
   push:
@@ -12,19 +12,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Debug - List Files
-        run: |
-          echo "Current directory structure:"
-          ls -R
-          if [ -f "gradlew" ]; then echo "gradlew exists"; else echo "gradlew is MISSING"; fi
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
+      - name: Fix Wrapper & Line Endings
+        run: |
+          sed -i 's/\r$//' gradlew || true
+          chmod +x gradlew
+          gradle wrapper --gradle-version 8.7
+
       - name: Build APK
         run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
