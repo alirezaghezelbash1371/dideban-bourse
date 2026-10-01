@@ -29,9 +29,9 @@ jobs:
           chmod +x gradlew
           gradle wrapper --gradle-version 8.7
 
-      - name: Build and Print Error directly
+      - name: Run Build
         run: |
-          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee /tmp/gradle_output.log || (echo "=== خطاهای کامپایل ===" && grep -A 25 -i -E "e: |error:|FAILURE:|BUILD FAILED" /tmp/gradle_output.log && exit 1)
+          ./gradlew assembleDebug --stacktrace --no-daemon
 
       - name: Upload APK
         if: success()
