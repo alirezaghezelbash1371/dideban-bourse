@@ -19,8 +19,10 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Build with Gradle
+      - name: Fix Wrapper and Build
         run: |
+          rm -f gradle/wrapper/gradle-wrapper.jar
+          gradle wrapper --gradle-version 8.7
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee build_output.log
         continue-on-error: true
@@ -30,7 +32,7 @@ jobs:
         run: |
           echo "### Build Log Output" >> $GITHUB_STEP_SUMMARY
           echo "<pre>" >> $GITHUB_STEP_SUMMARY
-          tail -n 30 build_output.log >> $GITHUB_STEP_SUMMARY
+          tail -n 50 build_output.log >> $GITHUB_STEP_SUMMARY
           echo "</pre>" >> $GITHUB_STEP_SUMMARY
           if grep -q "BUILD SUCCESSFUL" build_output.log; then
             exit 0
