@@ -2,57 +2,54 @@ name: Build APK
 
 on:
   push:
-    branches: [ main ]
+branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+runs-on: ubuntu-latest
+steps:
+- name: Checkout repository
+uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+- name: Set up JDK 17
+uses: actions/setup-java@v4
+with:
+distribution: 'temurin'
+java-version: '17'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.7'
+- name: Setup Gradle
+uses: gradle/actions/setup-gradle@v3
+with:
+gradle-version: '8.7'
 
-      - name: Fix Wrapper & Line Endings
-        run: |
-          sed -i 's/\r$//' gradlew || true
-          chmod +x gradlew
-          gradle wrapper --gradle-version 8.7
+- name: Fix Permissions
+run: |
+sed -i 's/\r$//' gradlew || true
+chmod +x gradlew
+gradle wrapper --gradle-version 8.7
 
-      - name: Run Build
-        run: |
-          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee output.log
-        continue-on-error: true
+- name: Build with Gradle
+run: |
+./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee build_output.log
+continue-on-error: true
 
-      - name: Post Error to Summary
-        run: |
-          echo "## 📋 خلاصه خطای بیلد" >> $GITHUB_STEP_SUMMARY
-          echo '
-```' >> $GITHUB_STEP_SUMMARY
-grep -A 30 -E "FAILURE:|Execution failed|error:|e: " output.log | head -n 35 >> $GITHUB_STEP_SUMMARY || tail -n 30 output.log >> $GITHUB_STEP_SUMMARY
-echo '
-```' >> $GITHUB_STEP_SUMMARY
-          
-          # اگر بیلد موفق نبوده اینجا رسماً جاب را متوقف کند
-          if grep -q "BUILD SUCCESSFUL" output.log; then
-            exit 0
-          else
-            exit 1
-          fi
+- name: Show Summary
+if: always()
+run: |
+echo "### Build Log Output" >> $GITHUB_STEP_SUMMARY
+echo "<pre>" >> $GITHUB_STEP_SUMMARY
+tail -n 45 build_output.log >> $GITHUB_STEP_SUMMARY
+echo "</pre>" >> $GITHUB_STEP_SUMMARY
+if grep -q "BUILD SUCCESSFUL" build_output.log; then
+exit 0
+else
+exit 1
+fi
 
-      - name: Upload APK
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+- name: Upload APK
+if: success()
+uses: actions/upload-artifact@v4
+with:
+name: app-debug-apk
+path: app/build/outputs/apk/debug/*.apk
