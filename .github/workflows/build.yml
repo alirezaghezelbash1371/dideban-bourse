@@ -31,10 +31,23 @@ jobs:
 
       - name: Build APK
         run: |
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug --stacktrace 2>&1 | tee build.log
+
+      - name: Show Error Logs on Failure
+        if: failure()
+        run: |
+          echo "==================== LAST 80 LINES OF LOG ===================="
+          tail -n 80 build.log
+
+      - name: Upload Build Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
 
       - name: Upload APK
-        if: always()
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
