@@ -29,22 +29,9 @@ jobs:
           chmod +x gradlew
           gradle wrapper --gradle-version 8.7
 
-      - name: Build APK
+      - name: Build and Print Error directly
         run: |
-          ./gradlew assembleDebug --stacktrace 2>&1 | tee build.log
-
-      - name: Show Error Logs on Failure
-        if: failure()
-        run: |
-          echo "==================== LAST 80 LINES OF LOG ===================="
-          tail -n 80 build.log
-
-      - name: Upload Build Log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: build.log
+          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee /tmp/gradle_output.log || (echo "=== خطاهای کامپایل ===" && grep -A 25 -i -E "e: |error:|FAILURE:|BUILD FAILED" /tmp/gradle_output.log && exit 1)
 
       - name: Upload APK
         if: success()
