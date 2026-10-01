@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.didebanbourse'
+    namespace 'com.dideban.bourse'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.example.didebanbourse"
+        applicationId "com.dideban.bourse"
         minSdk 24
         targetSdk 34
         versionCode 1
