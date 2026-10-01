@@ -31,7 +31,24 @@ jobs:
 
       - name: Run Build
         run: |
-          ./gradlew assembleDebug --stacktrace --no-daemon
+          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee output.log
+        continue-on-error: true
+
+      - name: Post Error to Summary
+        run: |
+          echo "## 📋 خلاصه خطای بیلد" >> $GITHUB_STEP_SUMMARY
+          echo '
+```' >> $GITHUB_STEP_SUMMARY
+grep -A 30 -E "FAILURE:|Execution failed|error:|e: " output.log | head -n 35 >> $GITHUB_STEP_SUMMARY || tail -n 30 output.log >> $GITHUB_STEP_SUMMARY
+echo '
+```' >> $GITHUB_STEP_SUMMARY
+          
+          # اگر بیلد موفق نبوده اینجا رسماً جاب را متوقف کند
+          if grep -q "BUILD SUCCESSFUL" output.log; then
+            exit 0
+          else
+            exit 1
+          fi
 
       - name: Upload APK
         if: success()
